@@ -1,1 +1,1 @@
-# Skeleton project for Swagger
+# Netflix API project with swagger-express
