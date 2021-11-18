@@ -1,0 +1,308 @@
+swagger: "2.0"
+info:
+  description: This is an API for the streaming service Netflix where people can watch movies and TV shows.
+  version: 0.0.1
+  title: Netflix
+host: localhost:3000
+tags:
+  - name: video
+    description: Operations about videos
+  - name: user
+    description: Operations about user
+  - name: admin
+    description: Admin operations
+schemes:
+  - https
+  - http
+basePath: /
+securityDefinitions:
+  session_id:
+    type: apiKey
+    name: X-Session-ID
+    in: header
+  admin_api_key:
+    type: apiKey
+    name: X-Admin-API-key
+    in: header
+consumes:
+  - application/json
+paths:
+  /user:
+    x-swagger-router-controller: netflix_controller
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: Creating a new user
+      operationId: createUser
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: Created user object
+          required: true
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        200:
+          description: User successfully created
+        400:
+          description: Invalid username or password
+
+  /user/login:
+    x-swagger-router-controller: netflix_controller
+    post:
+      tags:
+        - user
+      summary: Login
+      description: Login the user into the system
+      operationId: login
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user object
+          required: true
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        200:
+          description: Successful login
+          schema:
+            $ref: '#/definitions/Session'
+        400:
+          description: Invalid username or password
+  /user/logout:
+    x-swagger-router-controller: netflix_controller
+    get:
+      tags:
+        - user
+      summary: Logs out current user
+      description: Logs out and destroys session
+      operationId: logoutUser
+      produces:
+        - application/json
+      responses:
+        default:
+          description: Logged out successfully
+      security:
+        - session_id: []
+  /video:
+    x-swagger-router-controller: netflix_controller
+    get:
+      tags:
+        - video
+      summary: Getting videos
+      description: Searching for a video by title
+      operationId: getVideoByTitle
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: title
+          description: Title of the video
+          required: true
+          type: string
+      responses:
+        200:
+          description: Video found successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Video'
+        400:
+          description: Video not found
+      security:
+        - session_id: []
+  /queue:
+    x-swagger-router-controller: netflix_controller
+    post:
+      tags:
+        - video
+      summary: New video
+      description: Adding new video to your queue
+      operationId: addVideoToQueue
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: id
+          description: ID of the video
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Video succesfully added to queue
+          schema:
+            $ref: '#/definitions/Video'
+        400:
+          description: Invalid title
+      security:
+        - session_id: []
+    get:
+      tags:
+        - video
+      summary: Get videos in queue
+      description: Get the videos in your queue
+      operationId: getVideosInQueue
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Videos in you queue are listed
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Video'
+        400:
+          description: Listing videos unsuccessfull
+      security:
+        - session_id: []
+
+  /admin/video:
+    x-swagger-router-controller: netflix_controller
+    get:
+      tags:
+        - admin
+      summary: Getting a video
+      description: Getting information about a video by title
+      operationId: getVideoAdmin
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: title
+          description: Title of the video
+          required: true
+          type: string
+      responses:
+        200:
+          description: Video found successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Video'
+        400:
+          description: Video not found
+      security:
+        - admin_api_key: []
+    post:
+      tags:
+        - admin
+      summary: New video
+      description: Putting a new video on the site
+      operationId: postVideo
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: video
+          description: video object
+          required: true
+          schema:
+            $ref: '#/definitions/Video'
+      responses:
+        200:
+          description: Video succesfully added
+          schema:
+            $ref: '#/definitions/Video'
+        400:
+          description: Adding unsuccessfull
+      security:
+        - admin_api_key: []
+    patch:
+      tags:
+        - admin
+      summary: Modify video
+      description: Modifying the attributes of a video
+      operationId: patchVideo
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: video
+          description: video object
+          required: true
+          schema:
+            $ref: '#/definitions/Video'
+      responses:
+        200:
+          description: Video successfully modified
+          schema:
+            $ref: '#/definitions/Video'
+        400:
+          description: Modification unsuccessfull
+      security:
+        - admin_api_key: []
+    delete:
+      tags:
+        - admin
+      summary: Delete video
+      description: Deleting a video
+      operationId: deleteVideo
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id
+          description: ID of the video
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Video successfully deleted
+        400:
+          description: Delete unsuccessfull
+      security:
+        - admin_api_key: []
+
+definitions:
+  Category:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+        example: Action
+  User:
+    type: object
+    required:
+      - username
+      - password
+    properties:
+      username:
+        type: string
+        example: Scott
+      password:
+        type: string
+        example: CBask234Djo
+  Video:
+    type: object
+    required:
+      - title
+    properties:
+      id:
+        type: integer
+        example: 8984
+      category:
+        $ref: '#/definitions/Category'
+      title:
+        type: string
+        example: Vikings
+      type:
+        type: string
+        enum: [TV show, Movie]
+  Session:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        example: asdl849fjk
