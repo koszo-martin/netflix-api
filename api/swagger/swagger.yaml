@@ -252,7 +252,7 @@ paths:
           name: id
           description: ID of the video
           required: true
-          type: integer
+          type: string
       responses:
         200:
           description: Video successfully deleted

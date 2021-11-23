@@ -5,6 +5,8 @@ var app = require('express')();
 const swaggerSecurity = require('./api/helpers/swaggerSecurity')
 var path = require('path');
 module.exports = app; // for testing
+const dbApi = require('./api/DB/DB Api')
+
 
 var config = {
   appRoot: __dirname, // required config
@@ -17,7 +19,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
 
   // install middleware
   swaggerExpress.register(app);
-
+  dbApi.startDbApi()
   var port = process.env.PORT || 3000;
   app.listen(port);
 });

@@ -9,10 +9,15 @@ const router = express.Router()
 app.use(bodyParser.json())
 app.use(methodOverride())
 
-mongoose.connect('mongodb+srv://martin:fintechX@interntraining.bu99f.mongodb.net/InternTraining?retryWrites=true&w=majority');
 const UserSchema = new mongoose.Schema({
     username: String,
-    password: String
+    password: String,
+    queue: [
+        {
+            type : mongoose.Schema.ObjectId,
+            ref: 'Video'
+        }
+    ]
 })
 
 const CategorySchema = new mongoose.Schema({
@@ -27,28 +32,32 @@ const VideoSchema = new mongoose.Schema({
 })
 
 const SessionSchema = new mongoose.Schema({
-    session_id: String
+    user_id: {
+        type : mongoose.Schema.ObjectId,
+        ref: 'User'
+    }
 })
 
-
-const User = mongoose.model('User', UserSchema);
-
+const User = mongoose.model('User', UserSchema)
 const Category = mongoose.model('Category', CategorySchema);
-
 const Video = mongoose.model('Video', VideoSchema);
-
 const Session = mongoose.model('Session', SessionSchema);
 
-restify.serve(router, User);
-restify.serve(router, Category);
-restify.serve(router, Video);
-restify.serve(router, Session);
 
-app.use(router)
+function startDbApi(){
+    mongoose.connect('mongodb+srv://martin:fintechX@interntraining.bu99f.mongodb.net/InternTraining?retryWrites=true&w=majority');
+    restify.serve(router, User);
+    restify.serve(router, Category);
+    restify.serve(router, Video);
+    restify.serve(router, Session);
 
-app.listen(3001, () => {
-    console.log('Express server listening on port 3001')
-})
+    app.use(router)
 
+    app.listen(3001, () => {
+        console.log('Express server listening on port 3001')
+    })
+}
 
-
+module.exports = {
+    startDbApi
+}
