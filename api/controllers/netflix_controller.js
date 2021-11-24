@@ -61,14 +61,9 @@ function logoutUser(req, res){
     return logoutUserAsync(req, res);
 }
 async function logoutUserAsync(req, res){
-    try {
         await database.delete(`Session/${req.headers.session_id}`);
         res.json("success");
         return res;
-    }catch (err){
-        res.status(400).json("no session found");
-        return res;
-    }
 }
 
 function getVideoByTitle(req, res){
@@ -92,14 +87,11 @@ function addVideoToQueue(req, res){
 
 async function addVideoToQueueAsync(req, res){
     let response = await database.get(`Session/${req.headers.session_id}`);
-    if(response.data.length===0){
-        res.status(400).json("No session");
-        return res;
-    }
     let session = response.data;
     let user = await getUserBySession(session);
-    response = await database.get(`Video/${req.body.id}`);
-    if(response.data.length===0) {
+    try {
+        response = await database.get(`Video/${req.body.id}`);
+    }catch (err){
         res.status(400).json("Video not found").send();
         return res;
     }
@@ -116,10 +108,6 @@ function getVideosInQueue(req,res){
 
 async function getVideosInQueueAsync(req, res){
     let response = await database.get(`Session/${req.headers.session_id}`);
-    if(response.data.length===0){
-        res.status(400).json("No session");
-        return res;
-    }
     let session = response.data;
     let user = await getUserBySession(session);
     res.json(user.queue);
@@ -162,12 +150,13 @@ function patchVideo(req,res){
 
 async function patchVideoAsync(req, res){
     let category = await createCategoryIfNotExisting(req);
-    let response = await database.get(`Video/${req.body._id}`);
-    if(response.data.length===0) {
+    try {
+        await database.get(`Video/${req.body._id}`);
+    }catch (err){
         res.status(400).json("Video not found").send();
         return res;
     }
-    await database.patch(`Video/${req.body._id}`, {category: category, title: req.body.title, type: req.body.type});
+    let response = await database.patch(`Video/${req.body._id}`, {category: category, title: req.body.title, type: req.body.type});
     res.json(response.data);
     return res;
 }
@@ -182,7 +171,7 @@ async function deleteVideoAsync(req, res){
         res.json("success");
         return res;
     }catch (err){
-        res.status(400).json("delete failed");
+        res.status(400).json("Video not found");
         return res;
     }
 }
