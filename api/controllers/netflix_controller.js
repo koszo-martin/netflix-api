@@ -1,11 +1,11 @@
 const Session = require("../classes/Session");
-const User = require("../classes/User");
 const Video = require("../classes/Video");
 const Category = require("../classes/Category");
-const Repository = require("../classes/Repository");
+const User = require("../classes/User");
 const axios = require('axios');
+require("dotenv").config();
 const database = axios.create({
-    baseURL: 'http://localhost:3001/api/v1/'
+    baseURL: process.env.DATABASE_URL || 'http://localhost:3001/api/v1/'
 })
 
 async function getUserBySession(session){
@@ -14,30 +14,19 @@ async function getUserBySession(session){
     return user;
 }
 
-async function getUsersFromDb(){
-    let users;
-    await database.get('User')
-        .then(function (response){
-            users=response.data;
-        })
-    return users;
-}
 function createUser(req, res){
     return createUserAsync(req, res);
 }
 
 async function createUserAsync(req, res){
-        let response = await database.get(`User?query={"username" : "${req.body.username}"}`);
+        let response = await database.get(`User?query={"username": "${req.body.username}"}`);
         if(response.data.length>0) {
-            res.status(400).json("User already exists");
+            res.status(400).json({message: "User already exists"});
             return res;
         }
-        const user = {
-            username:req.body.username,
-            password:req.body.password
-        }
+        const user = new User(req.body.username, req.body.password);
         await database.post('User', user);
-        await res.json("success");
+        await res.json({message: "success"});
         return res;
 }
 
@@ -46,9 +35,9 @@ function login(req, res){
 }
 
 async function loginAsync(req, res){
-    let response = await database.get(`User?query={"username":"${req.body.username}","password":"${req.body.password}"}`);
+    let response = await database.get(`User?query={"username":"${req.body.username}", "password": "${req.body.password}"}`);
     if(response.data.length===0){
-        res.status(400).json("User not found");
+        res.status(400).json({message: "User not found"});
         return res;
         }
     let session = new Session(response.data[0]._id);
@@ -62,7 +51,7 @@ function logoutUser(req, res){
 }
 async function logoutUserAsync(req, res){
         await database.delete(`Session/${req.headers.session_id}`);
-        res.json("success");
+        res.json({message: "success"});
         return res;
 }
 
@@ -89,12 +78,14 @@ async function addVideoToQueueAsync(req, res){
     let response = await database.get(`Session/${req.headers.session_id}`);
     let session = response.data;
     let user = await getUserBySession(session);
+
     try {
         response = await database.get(`Video/${req.body.id}`);
     }catch (err){
-        res.status(400).json("Video not found").send();
+        res.status(400).json({message: "Video not found"});
         return res;
     }
+
     let video = response.data;
     user.queue.push(video._id);
     await database.patch(`User/${user._id}`, {queue:user.queue});
@@ -123,19 +114,19 @@ function postVideo(req,res){
 }
 
 async function createCategoryIfNotExisting(req){
-    let response = await database.get(`Category?query={"name":"${req.body.category.name}"}`);
+    let response = await database.get(`Category?query={"name": "${req.body.category.name}"}`);
     if(response.data.length===0){
         let category = new Category(req.body.category.name);
         await database.post('Category', category);
     }
-    return (await database.get(`Category?query={"name":"${req.body.category.name}"}`)).data[0];
+    return (await database.get(`Category?query={"name": "${req.body.category.name}"}`)).data[0];
 }
 
 async function postVideoAsync(req, res){
     let category = await createCategoryIfNotExisting(req);
-    let response = await database.get(`Video?query={"title":"${req.body.title}"}`);
+    let response = await database.get(`Video?query={"title": "${req.body.title}"}`);
     if(response.data.length>0){
-        res.status(400).json("Invalid video title")
+        res.status(400).json({message: "Invalid video title"})
         return res
     }
     let video = new Video(category, req.body.title, req.body.type);
@@ -153,7 +144,7 @@ async function patchVideoAsync(req, res){
     try {
         await database.get(`Video/${req.body._id}`);
     }catch (err){
-        res.status(400).json("Video not found").send();
+        res.status(400).json({message: "Video not found"});
         return res;
     }
     let response = await database.patch(`Video/${req.body._id}`, {category: category, title: req.body.title, type: req.body.type});
@@ -168,10 +159,10 @@ function deleteVideo(req,res){
 async function deleteVideoAsync(req, res){
     try {
         await database.delete(`Video/${req.query.id}`);
-        res.json("success");
+        res.json({message: "success"});
         return res;
     }catch (err){
-        res.status(400).json("Video not found");
+        res.status(400).json({message: "Video not found"});
         return res;
     }
 }

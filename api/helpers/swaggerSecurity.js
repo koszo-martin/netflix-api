@@ -1,6 +1,6 @@
 const axios = require('axios');
 const database = axios.create({
-    baseURL: 'http://localhost:3001/api/v1/'
+    baseURL: process.env.DATABASE_URL ||'http://localhost:3001/api/v1/'
 })
 
 const adminApiKey = '241234213478364'

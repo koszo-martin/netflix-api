@@ -265,9 +265,8 @@ definitions:
   Category:
     type: object
     properties:
-      id:
-        type: integer
       name:
+        description: The name of the video category
         type: string
         example: Action
   User:
@@ -277,9 +276,11 @@ definitions:
       - password
     properties:
       username:
+        description: The name which the user uses to login
         type: string
         example: Scott
       password:
+        description: The password which the user uses to login
         type: string
         example: CBask234Djo
   Video:
@@ -287,22 +288,23 @@ definitions:
     required:
       - title
     properties:
-      id:
-        type: integer
-        example: 8984
       category:
+        description: The category of the video
         $ref: '#/definitions/Category'
       title:
+        description: The title of the video which can be searched by users
         type: string
         example: Vikings
       type:
+        description: The type of the video which can have 2 values TV show or Movie
         type: string
         enum: [TV show, Movie]
   Session:
     type: object
     required:
-      - id
+      - user_id
     properties:
-      id:
+      user_id:
+        description: The id of the user the session belongs to
         type: string
         example: asdl849fjk
